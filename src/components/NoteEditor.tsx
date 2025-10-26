@@ -18,27 +18,43 @@ export const NoteEditor = () => {
     const afterText = content.substring(end);
 
     let newText = "";
+    let newCursorPos = start;
 
     switch (type) {
       case 'bold':
         if (selectedText) {
           newText = beforeText + `**${selectedText}**` + afterText;
+          newCursorPos = start + selectedText.length + 4;
           toast.success("Text formatted as bold!");
         } else {
           newText = beforeText + "****" + afterText;
+          newCursorPos = start + 2;
           toast.info("Select text to make it bold");
         }
         break;
       case 'bullet':
-        const bulletLine = selectedText || "List item";
-        newText = beforeText + `• ${bulletLine}` + afterText;
-        toast.success("Bullet point added!");
+      case 'number': {
+        if (selectedText.includes('\n')) {
+          // Multi-line selection
+          const lines = selectedText.split('\n');
+          const prefix = type === 'bullet' ? '• ' : '';
+          const formattedLines = lines.map((line, index) => {
+            if (line.trim()) {
+              return type === 'bullet' ? `${prefix}${line}` : `${index + 1}. ${line}`;
+            }
+            return line;
+          });
+          newText = beforeText + formattedLines.join('\n') + afterText;
+          toast.success(type === 'bullet' ? "Bullet points added!" : "Numbered list added!");
+        } else {
+          // Single line
+          const line = selectedText || "List item";
+          const formatted = type === 'bullet' ? `• ${line}` : `1. ${line}`;
+          newText = beforeText + formatted + afterText;
+          toast.success(type === 'bullet' ? "Bullet point added!" : "Numbered list added!");
+        }
         break;
-      case 'number':
-        const numberLine = selectedText || "List item";
-        newText = beforeText + `1. ${numberLine}` + afterText;
-        toast.success("Numbered list added!");
-        break;
+      }
     }
 
     setContent(newText);
@@ -46,9 +62,7 @@ export const NoteEditor = () => {
     // Restore focus and cursor position
     setTimeout(() => {
       textarea.focus();
-      if (type === 'bold' && !selectedText) {
-        textarea.setSelectionRange(start + 2, start + 2);
-      }
+      textarea.setSelectionRange(newCursorPos, newCursorPos);
     }, 0);
   };
 
