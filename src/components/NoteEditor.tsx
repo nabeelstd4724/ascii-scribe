@@ -27,17 +27,26 @@ export const NoteEditor = () => {
         break;
       case 'bullet': {
         const range = selection.getRangeAt(0);
+        const container = range.commonAncestorContainer;
         const selectedText = range.toString();
         
-        if (selectedText.includes('\n')) {
+        // Get the actual text content preserving line breaks
+        let textContent = selectedText;
+        if (container.nodeType === Node.ELEMENT_NODE) {
+          const tempDiv = document.createElement('div');
+          tempDiv.appendChild(range.cloneContents());
+          textContent = tempDiv.innerText || tempDiv.textContent || '';
+        }
+        
+        if (textContent.includes('\n')) {
           // Multi-line selection
-          const lines = selectedText.split('\n');
+          const lines = textContent.split('\n');
           const formattedLines = lines.map(line => 
             line.trim() ? `${bulletStyle} ${line}` : line
           ).join('\n');
           document.execCommand('insertText', false, formattedLines);
         } else {
-          const text = selectedText || "List item";
+          const text = textContent || "List item";
           document.execCommand('insertText', false, `${bulletStyle} ${text}`);
         }
         toast.success("Bullet points added!");
@@ -45,17 +54,26 @@ export const NoteEditor = () => {
       }
       case 'number': {
         const range = selection.getRangeAt(0);
+        const container = range.commonAncestorContainer;
         const selectedText = range.toString();
         
-        if (selectedText.includes('\n')) {
+        // Get the actual text content preserving line breaks
+        let textContent = selectedText;
+        if (container.nodeType === Node.ELEMENT_NODE) {
+          const tempDiv = document.createElement('div');
+          tempDiv.appendChild(range.cloneContents());
+          textContent = tempDiv.innerText || tempDiv.textContent || '';
+        }
+        
+        if (textContent.includes('\n')) {
           // Multi-line selection
-          const lines = selectedText.split('\n');
+          const lines = textContent.split('\n');
           const formattedLines = lines.map((line, index) => 
             line.trim() ? `${index + 1}. ${line}` : line
           ).join('\n');
           document.execCommand('insertText', false, formattedLines);
         } else {
-          const text = selectedText || "List item";
+          const text = textContent || "List item";
           document.execCommand('insertText', false, `1. ${text}`);
         }
         toast.success("Numbered list added!");
